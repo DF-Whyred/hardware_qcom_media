@@ -13739,11 +13739,10 @@ void omx_vdec::prefetchNewBuffers(bool reconfig) {
         return;
     }
 
-    struct ion_custom_data *custom_data = (struct ion_custom_data*) malloc(sizeof(*custom_data));
     struct ion_prefetch_data *prefetch_data = (struct ion_prefetch_data*) malloc(sizeof(*prefetch_data));
     struct ion_prefetch_regions *regions = (struct ion_prefetch_regions*) malloc(sizeof(*regions));
 
-    if (custom_data == NULL || prefetch_data == NULL || regions == NULL) {
+    if (prefetch_data == NULL || regions == NULL) {
         DEBUG_PRINT_ERROR("prefetch data allocation failed");
         goto prefetch_exit;
     }
@@ -13756,9 +13755,7 @@ void omx_vdec::prefetchNewBuffers(bool reconfig) {
     prefetch_data->regions = (__u64)regions;
     prefetch_data->heap_id = ION_HEAP(ION_SECURE_HEAP_ID);
 
-    custom_data->cmd = ION_IOC_PREFETCH;
-    custom_data->arg = (unsigned long )prefetch_data;
-    rc = ioctl(ion_fd, ION_IOC_CUSTOM, custom_data);
+    rc = ioctl(ion_fd, ION_IOC_PREFETCH, &prefetch_data);
     if (rc) {
         DEBUG_PRINT_ERROR("Custom prefetch ioctl failed rc : %d, errno : %d\n", rc, errno);
     } else {
@@ -13770,7 +13767,6 @@ prefetch_exit:
     close(ion_fd);
     free(regions);
     free(prefetch_data);
-    free(custom_data);
 }
 
 void omx_vdec::drainPrefetchedBuffers() {
@@ -13782,11 +13778,10 @@ void omx_vdec::drainPrefetchedBuffers() {
         return;
     }
 
-    struct ion_custom_data *custom_data = (struct ion_custom_data*) malloc(sizeof(*custom_data));
     struct ion_prefetch_data *prefetch_data = (struct ion_prefetch_data*) malloc(sizeof(*prefetch_data));
     struct ion_prefetch_regions *regions = (struct ion_prefetch_regions*) malloc(sizeof(*regions));
 
-    if (custom_data == NULL || prefetch_data == NULL || regions == NULL) {
+    if (prefetch_data == NULL || regions == NULL) {
         DEBUG_PRINT_ERROR("drain data allocation failed");
         goto drain_exit;
     }
@@ -13799,10 +13794,7 @@ void omx_vdec::drainPrefetchedBuffers() {
     prefetch_data->regions = (__u64)regions;
     prefetch_data->heap_id = ION_HEAP(ION_SECURE_HEAP_ID);
 
-    custom_data->cmd = ION_IOC_DRAIN;
-    custom_data->arg = (unsigned long )prefetch_data;
-
-    rc = ioctl(ion_fd, ION_IOC_CUSTOM, custom_data);
+    rc = ioctl(ion_fd, ION_IOC_DRAIN, &prefetch_data);
     if (rc) {
         DEBUG_PRINT_ERROR("Custom drain ioctl failed rc : %d, errno : %d\n", rc, errno);
     } else {
@@ -13815,7 +13807,6 @@ drain_exit:
     close(ion_fd);
     free(regions);
     free(prefetch_data);
-    free(custom_data);
 }
 
 
